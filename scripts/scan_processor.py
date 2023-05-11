@@ -11,7 +11,7 @@ from sensor_msgs.msg import PointCloud2
 class Processor:
     def __init__(self):
         rospy.init_node('scan_processor', anonymous=True)
-        self.odom = 'base_link'
+        self.odom = 'vision'
         self.clouds = {}
         self.stamps = {}
         self.freq = rospy.get_param('/cloud_freq')
