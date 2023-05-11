@@ -1,0 +1,6 @@
+string fixed_frame
+geometry_msgs/Point[] coords
+---
+bool success
+int64 n_failed
+string message
