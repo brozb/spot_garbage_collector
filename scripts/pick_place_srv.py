@@ -7,7 +7,7 @@ from visualization_msgs.msg import *
 from spot_msgs.srv import ArmCartesianTrajectory, ArmCartesianTrajectoryRequest
 from geometry_msgs.msg import Point, Pose, Quaternion
 from std_srvs.srv import Trigger, TriggerRequest
-from spot_popelar.srv import MultiGrasp, MultiGraspResponse
+from spot_garbage_collector.srv import MultiGrasp, MultiGraspResponse
 from spot_msgs.srv import Grasp3d, Grasp3dRequest
 import time
 import numpy as np
