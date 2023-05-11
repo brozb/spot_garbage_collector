@@ -31,6 +31,9 @@ from interactive_markers.interactive_marker_server import *
 from visualization_msgs.msg import *
 from geometry_msgs.msg import Point
 
+from spot_garbage_collector.srv import MultiGrasp, MultiGraspRequest
+
+
 from optimize_route import *
 
 
@@ -139,40 +142,38 @@ def _pub_arm_pose(event):
 
 def _pub_mark(event):
     # Function to indicate the robot take an detectoed object
-    global centroids, point, counter_num_collect_obj
+    global centroids, point, counter_num_collect_obj, service
     # create an interactive marker server on the topic namespace simple_marker
 
-    """server = InteractiveMarkerServer("simple_marker")
+    """p1 = Point()
+    p1.x = centroids[0][0]
+    p1.y = centroids[0][1]
+    p1.z = centroids[0][2]
+
+    p2 = Point()
+    p2.x = centroids[1][0]
+    p2.y = centroids[1][1]
+    p2.z = centroids[1][2]
+
+    p3 = Point()
+    p3.x = centroids[2][0]
+    p3.y = centroids[2][1]
+    p3.z = centroids[2][2]"""
+
+    list = []
+
+    for i in range(len(centroids)):
+        p1 = Point()
+        p1.x = centroids[i][0]
+        p1.y = centroids[i][1]
+        p1.z = centroids[i][2]
+        list.append(p1)        
+
+    #req = MultiGraspRequest('vision',[p1,p2,p3])
+    req = MultiGraspRequest('vision',list)
+    resp = service(req)
     
-    # create an interactive marker for our server
-    int_marker = InteractiveMarker()
-    int_marker.header.frame_id = "body"
-    int_marker.name = "object_1"
-
-    # create a grey box marker
-    box_marker = Marker()
-    box_marker.type = Marker.SPHERE
-    box_marker.scale.x = 0.1; box_marker.scale.y = 0.1 ; box_marker.scale.z = 0.1
-    box_marker.color.r = 0.0 ; box_marker.color.g = 1 ; box_marker.color.b = 0.0 ; box_marker.color.a = 0.7
-    box_marker.pose.position.x = centroids[0][0]
-    box_marker.pose.position.y = centroids[0][1]
-    box_marker.pose.position.z = centroids[0][2]
-
-    # create a non-interactive control which contains the box
-    box_control = InteractiveMarkerControl()
-    box_control.always_visible = True
-    box_control.markers.append( box_marker )
-    # add the control to the interactive marker
-    int_marker.controls.append( box_control )
-
-    # add the interactive marker to our collection &
-    # tell the server to call processFeedback() when feedback arrives for it
-    server.insert(int_marker)
-    server.applyChanges()"""
-    
-    point.publish(centroids[counter_num_collect_obj][0],centroids[counter_num_collect_obj][1],centroids[counter_num_collect_obj][2])
-    print("Lets grasp object # ",counter_num_collect_obj + 1)
-    #rospy.spin()
+    print("ok")
 
 def _extract_soil(event):
 
@@ -327,9 +328,12 @@ def callback_finish_grasp(data):
     
 
 def talker():
-    global f, pub, pcl_pub, point, point_pose_arm
+    global f, pub, pcl_pub, point, point_pose_arm, service
     pub = rospy.Publisher('slider', Float32, queue_size=10)
     rospy.init_node('talker', anonymous=True)
+
+    # call service
+    service = rospy.ServiceProxy('/multi_pick_and_place', MultiGrasp)
 
     # publisher Poin Cloud
     pcl_pub = rospy.Publisher("/downsample_cloud2", PointCloud2, queue_size=1000000)
