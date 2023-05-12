@@ -19,8 +19,8 @@ class PickPlace:
 
         # generate circle arm trajectory from carry to container
         q = Quaternion(0.0, 0.7209864258766174, 0.0, 0.6929491758346558)
-        p1 = np.array([[0.6494148373603821], [0.0], [0.36452290415763855]])
-        p3 = np.array([[-0.06267781555652618], [0.020665884017944336], [0.36452290415763855]])
+        p1 = np.array([[0.6494148373603821], [0.0], [0.42276856303215027]])
+        p3 = np.array([[-0.22189830243587494], [0.02764293923974037], [0.42276856303215027]])
         self.traj = [Pose(Point(p1[0, 0], p1[1, 0], p1[2, 0]), q)]
         center = (p1+p3)/2
         center[1, 0] = 0.  # keep the center aligned with the body axis
@@ -44,6 +44,7 @@ class PickPlace:
         self.close_proxy = rospy.ServiceProxy('/spot/gripper_close', Trigger)
         self.stow_proxy = rospy.ServiceProxy('/spot/arm_stow', Trigger)
         self.service = rospy.Service('/multi_pick_and_place', MultiGrasp, self.run)
+        rospy.loginfo('Ready to pick up objects')
 
     def run(self, req):
         points = req.coords
@@ -64,7 +65,6 @@ class PickPlace:
                 r.poses = self.traj
                 rospy.loginfo('Sending trajectory request')
                 resp = self.trajectory_proxy(r)
-                rospy.loginfo(resp)
 
                 # open the gripper
                 self.open_proxy(TriggerRequest())
@@ -77,7 +77,6 @@ class PickPlace:
                 r.poses = self.traj[::-1]
                 rospy.loginfo('Sending trajectory request')
                 resp = self.trajectory_proxy(r)
-                rospy.loginfo(resp)
 
                 self.close_proxy()
                 self.stow_proxy()
