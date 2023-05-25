@@ -12,10 +12,11 @@ class Processor:
     def __init__(self):
         rospy.init_node('scan_processor', anonymous=True)
         self.odom = 'vision'
+        self.body = 'body'
         self.clouds = {}
         self.stamps = {}
         self.freq = rospy.get_param('/cloud_freq')
-        self.cloud_timeout = 1.0
+        self.cloud_timeout = 3.0
 
         self.tf_buffer = tf2_ros.Buffer()
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer)
@@ -81,11 +82,23 @@ class Processor:
 
     def cloud_callback(self, msg, position):
         """convert the point cloud to numpy array, transform it to odom frame and save to the dictionary"""
-        t = self.get_transform(self.odom, msg.header.frame_id, time=msg.header.stamp)
+        t1 = self.get_transform(self.body, msg.header.frame_id, time=msg.header.stamp)
+        t2 = self.get_transform(self.odom, self.body, time=msg.header.stamp)
+        t3 = self.get_transform(self.body, 'gpe', time=msg.header.stamp)
+        z_offset = np.abs(t3[2,3])
 
         points = np.transpose(ros_numpy.point_cloud2.pointcloud2_to_xyz_array(msg))
         points = np.concatenate((points, np.ones((1, np.shape(points)[1]))), axis=0)
-        points_tf = np.matmul(t, points)[0:3,:]
+        points_tf = np.matmul(t1, points)
+        
+        #apply bounding box
+        a = np.abs(points_tf[0,:])<=3
+        b = np.abs(points_tf[1,:])<=3
+        c = points_tf[2,:]<=1.2-z_offset
+        points_tf = points_tf[:, np.where(np.logical_and(a, np.logical_and(b, c)))[0]]
+
+        #bring it to static frame
+        points_tf = np.matmul(t2, points_tf)[0:3,:]
 
         self.clouds[position] = points_tf[0:3,:]
         self.stamps[position] = msg.header.stamp
