@@ -94,7 +94,6 @@ void Filter::callback_tim(const ros::TimerEvent&) {
         *cloud_cat += *cloud;
     }
     
-
     // Perform the actual filtering
     pcl::PCLPointCloud2* cloud_filtered = new pcl::PCLPointCloud2;
     pcl::PCLPointCloud2ConstPtr cloudPtr2(cloud_filtered);
@@ -124,8 +123,22 @@ void Filter::callback_tim(const ros::TimerEvent&) {
     sensor_msgs::PointCloud2 output;
     pcl_conversions::fromPCL(cloud_cropped, output);
 
+    // Transform cloud to vision frame
+    sensor_msgs::PointCloud2 cloud_out;
+    geometry_msgs::TransformStamped transform;
+    try{
+        transform = tfBuffer_p->lookupTransform("vision", "body", ros::Time(0));
+    }
+    catch (tf2::TransformException &ex) {
+        ROS_WARN("%s", ex.what());
+        return;
+    }
+    Eigen::Matrix4f mat = tf2::transformToEigen(transform).matrix().cast <float> ();
+    pcl_ros::transformPointCloud(mat, output, cloud_out);
+    cloud_out.header.frame_id = "vision";
+
     // Publish the data
-    pcl_pub.publish (output);
+    pcl_pub.publish(cloud_out);
 }
 
 int main(int argc, char **argv)
