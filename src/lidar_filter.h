@@ -36,8 +36,8 @@ const float bad_point = std::numeric_limits<float>::quiet_NaN();
 
 class Filter {
 public:
-    tf2_ros::Buffer* tfBuffer_p;
-    tf2_ros::TransformListener* tfListener_p;
+    boost::shared_ptr<tf2_ros::Buffer> tfBuffer_p;
+    boost::shared_ptr<tf2_ros::TransformListener> tfListener_p;
 
     bool* fl_received;
     bool* fr_received;

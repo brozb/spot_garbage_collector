@@ -7,10 +7,9 @@ using namespace std;
 
 Filter::Filter(ros::NodeHandle *nh) {
     pcl_pub = nh->advertise<sensor_msgs::PointCloud2>("/points/filtered2", 1);
-    tfBuffer_p = new tf2_ros::Buffer;
-    tf2_ros::TransformListener tfListener(*tfBuffer_p);
-    tfListener_p = &tfListener;
-    ros::Duration(1.0).sleep();
+    tfBuffer_p = boost::make_shared<tf2_ros::Buffer>();
+    tfListener_p = boost::make_shared<tf2_ros::TransformListener>(*tfBuffer_p);
+    ros::Duration(2.0).sleep();
 
     cloud_lock_p = new boost::mutex();
     
@@ -25,12 +24,16 @@ Filter::Filter(ros::NodeHandle *nh) {
     cloud_l = boost::make_shared<sensor_msgs::PointCloud2>();
     cloud_r = boost::make_shared<sensor_msgs::PointCloud2>();
     cloud_b = boost::make_shared<sensor_msgs::PointCloud2>();
+    
+    ros::Duration(0.5).sleep();
 
     sub1 = nh->subscribe<sensor_msgs::PointCloud2>("/points/frontleft", 1, boost::bind(&Filter::callback, this, _1, cloud_fl, fl_received, "frontleft"));
     sub2 = nh->subscribe<sensor_msgs::PointCloud2>("/points/frontright", 1, boost::bind(&Filter::callback, this, _1, cloud_fr, fr_received, "frontright"));
     sub3 = nh->subscribe<sensor_msgs::PointCloud2>("/points/left", 1, boost::bind(&Filter::callback, this, _1, cloud_l, l_received, "left"));
     sub4 = nh->subscribe<sensor_msgs::PointCloud2>("/points/right", 1, boost::bind(&Filter::callback, this, _1, cloud_r, r_received, "right"));
     sub5 = nh->subscribe<sensor_msgs::PointCloud2>("/points/back", 1, boost::bind(&Filter::callback, this, _1, cloud_b, b_received, "back"));
+
+    ros::Duration(0.5).sleep();
 
     timer = nh->createTimer(ros::Duration(0.2), &Filter::callback_tim, this);
     ROS_INFO("Publishing the filtered point cloud on topic '/points/filtered2'");
@@ -124,16 +127,17 @@ void Filter::callback_tim(const ros::TimerEvent&) {
     pcl_conversions::fromPCL(cloud_cropped, output);
 
     // Transform cloud to vision frame
+    geometry_msgs::TransformStamped transform2;
     sensor_msgs::PointCloud2 cloud_out;
     try{
-        transform = tfBuffer_p->lookupTransform("vision", "body", ros::Time(0));
+        transform2 = tfBuffer_p->lookupTransform("vision", "body", ros::Time(0));
     }
     catch (tf2::TransformException &ex) {
         ROS_WARN("%s", ex.what());
         return;
     }
-    Eigen::Matrix4f mat = tf2::transformToEigen(transform).matrix().cast <float> ();
-    pcl_ros::transformPointCloud(mat, output, cloud_out);
+    Eigen::Matrix4f mat2 = tf2::transformToEigen(transform2).matrix().cast <float> ();
+    pcl_ros::transformPointCloud(mat2, output, cloud_out);
     cloud_out.header.frame_id = "vision";
 
     // Publish the data
