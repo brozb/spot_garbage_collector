@@ -125,7 +125,6 @@ void Filter::callback_tim(const ros::TimerEvent&) {
 
     // Transform cloud to vision frame
     sensor_msgs::PointCloud2 cloud_out;
-    geometry_msgs::TransformStamped transform;
     try{
         transform = tfBuffer_p->lookupTransform("vision", "body", ros::Time(0));
     }
