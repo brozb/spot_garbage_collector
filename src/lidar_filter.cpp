@@ -35,7 +35,16 @@ Filter::Filter(ros::NodeHandle *nh) {
 
     ros::Duration(0.5).sleep();
 
-    timer = nh->createTimer(ros::Duration(0.2), &Filter::callback_tim, this);
+    double freq;
+    if (ros::param::get("/cloud_freq", freq))
+    {
+	    ROS_INFO("Setting publishing frequency to %f Hz", freq);
+    } else {
+	    ROS_INFO("Using default frequency of 5 Hz");
+        freq = 5;
+    }
+
+    timer = nh->createTimer(ros::Duration(1.0/freq), &Filter::callback_tim, this);
     ROS_INFO("Publishing the filtered point cloud on topic '/points/filtered2'");
 }
 

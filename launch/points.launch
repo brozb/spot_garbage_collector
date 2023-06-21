@@ -1,4 +1,5 @@
 <launch>
+  <param name='/cloud_freq' type='double' value='7.0'/>
   <node name="$(anon lidar_filter)" pkg="spot_garbage_collector" type="lidar_filter" output="screen" required='true'/>
 
   <node pkg="nodelet" type="nodelet" name="nodelet_manager" args="manager" />
