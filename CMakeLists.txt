@@ -45,3 +45,6 @@ include_directories(
 
 add_executable(lidar_filter src/lidar_filter.cpp)
 target_link_libraries(lidar_filter ${catkin_LIBRARIES})
+
+add_executable(traversability_builder src/traversability_builder.cpp)
+target_link_libraries(traversability_builder ${catkin_LIBRARIES})

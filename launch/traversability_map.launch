@@ -1,0 +1,5 @@
+<launch>
+  <node name="$(anon traversability_builder)" pkg="spot_garbage_collector" type="traversability_builder" output="screen" required='true'/>
+
+  <node name="$(anon cloud2grid)" pkg="spot_garbage_collector" type="cloud2grid.py" output="screen" required='true'/>
+</launch>
