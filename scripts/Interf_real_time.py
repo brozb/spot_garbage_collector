@@ -18,6 +18,8 @@ from sklearn import metrics
 
 from sensor_msgs.msg import PointCloud2
 import std_msgs.msg
+from spot_msgs.srv import ArmGaze
+from std_srvs.srv import Trigger
 
 import open3d as o3d
 from sklearn.cluster import KMeans, DBSCAN
@@ -134,17 +136,38 @@ def _pub_arm_pose(event):
     # Function to pub each one of the  goal points of clusters to inspect with the arm camera
     global poses_arm, centroids, point_pose_arm, counter_pose_arm
 
+    rospy.wait_for_service('/spot/arm_gaze')
+    proxy = rospy.ServiceProxy('/spot/arm_gaze', ArmGaze)
+
     coord_x = centroids[counter_pose_arm][0]
     coord_y = centroids[counter_pose_arm][1]
-    angle = abs(math.atan(coord_y / coord_x))
+    coord_z = centroids[counter_pose_arm][2]
 
-    new_coord_x = (coord_x/abs(coord_x))*(Rad * math.cos(angle))
-    new_coord_y = (coord_y/abs(coord_y))*(Rad * math.sin(angle))
-    print(new_coord_x,new_coord_y)
+    # send gaze command
+    gaze_cmd = ArmGaze()
+    gaze_cmd.frame_name = 'vision'
+    gaze_cmd.point = Point(coord_x, coord_y, coord_z)
+    res = proxy(gaze_cmd)  #returns the result once the arm has reached the position
 
-    point_pose_arm.publish(new_coord_x,new_coord_y,z_alt)
-    b = TransformBroadcaster()
-    b.sendTransform((new_coord_x,new_coord_y,z_alt), (0,0,0,1), Time.now() - rospy.Duration(3) , 'arm_inspect_point', '/vision')
+    if not res.success:
+        rospy.logerr("Gaze command was not successful")
+    else:
+        rospy.loginfo("Gaze completed")
+
+    # the object should be now approximately in the center of the image of gripper camera
+
+    # TODO: read gripper camera image and verify if the detected object is graspable
+    #       wait is probably necessary, since the camera image can be a little bit delayed
+    #       multiple objects can be detected in single image, use the P matrix from sensor_msgs/CameraInfo to project the 3d point into the image
+
+    # gaze command leaves the arm at the selected pose, stow it before returning
+    rospy.wait_for_service('/spot/arm_stow')
+    proxy2 = rospy.ServiceProxy('/spot/arm_stow', Trigger)
+    proxy2()
+    # the gripper has to be closed
+    rospy.wait_for_service('/spot/gripper_close')
+    proxy3 = rospy.ServiceProxy('/spot/gripper_close', Trigger)
+    proxy3()
 
     counter_pose_arm += 1
     print ("Pub Goal Pose for Arm Inspect")
