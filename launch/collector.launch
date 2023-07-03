@@ -1,0 +1,6 @@
+<launch>
+  <include file="$(find spot_garbage_collector)/launch/points.launch"/>
+  <node name="$(anon multi_pick_and_place)" pkg="spot_garbage_collector" type="pick_place_srv.py" output="screen" required='true'/>
+  <node name="$(anon video_pub_py)" pkg="spot_garbage_collector" type="yolo_garbage_spot.py" output="screen" required='true'/>
+  <node name="$(anon interface)" pkg="spot_garbage_collector" type="Interf_real_time.py" output="screen" required='true'/>
+</launch>
