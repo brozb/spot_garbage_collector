@@ -19,8 +19,8 @@ class PickPlace:
 
         # generate circle arm trajectory from carry to container
         q = Quaternion(0.0, 0.7209864258766174, 0.0, 0.6929491758346558)
-        p1 = np.array([[0.6494148373603821], [0.0], [0.42276856303215027]])
-        p3 = np.array([[-0.22189830243587494], [0.02764293923974037], [0.42276856303215027]])
+        p1 = np.array([[0.6494148373603821], [0.0], [0.42276856303215027]])  # start - close to the carry position
+        p3 = np.array([[-0.22189830243587494], [0.02764293923974037], [0.42276856303215027]])  # end - above the container
         self.traj = [Pose(Point(p1[0, 0], p1[1, 0], p1[2, 0]), q)]
         center = (p1+p3)/2
         center[1, 0] = 0.  # keep the center aligned with the body axis
@@ -49,7 +49,8 @@ class PickPlace:
     def run(self, req):
         points = req.coords
         frame = req.fixed_frame
-        n_failed = 0
+        index = 0
+        abort = False
         rospy.loginfo('Received grasp request with %d objects' % (len(points)))
         for p in points:
             # build grasp request
@@ -83,19 +84,18 @@ class PickPlace:
                 time.sleep(2)
                 rospy.loginfo('Grasp successful')
             else:
-                rospy.logwarn('Grasp failed')
-                n_failed += 1
-        rospy.loginfo('Request finished with %d failures' % n_failed)
-        if n_failed == 0:
-            msg = 'All grasp successful'
-            success = True
-        elif n_failed < len(points):
-            msg = 'Some grasps failed'
-            success = True
-        else:
-            msg = 'All grasps failed'
+                rospy.logwarn('Grasp %d failed, aborting' % index)
+                abort = True
+                break
+            index += 1
+        if abort:
+            msg = 'Execution stopped at first failure [object with index %d]' % index
             success = False
-        return success, n_failed, msg
+        else:
+            msg = 'All grasps successful'
+            success = True
+            index = -1  # no grasp failed
+        return success, index, msg
 
 
 if __name__ == "__main__":

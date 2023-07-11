@@ -2,5 +2,6 @@ string fixed_frame
 geometry_msgs/Point[] coords
 ---
 bool success
-int64 n_failed
+#return position of the failed grasp in coords list, -1 if all grasps are successful
+int64 fail_id
 string message
