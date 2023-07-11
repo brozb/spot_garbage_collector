@@ -190,6 +190,17 @@ def _pub_mark(event):
     req = MultiGraspRequest('vision',list)
     resp = service(req)
     
+    if resp.fail_id != -1:
+        #### Text Output
+        plt.text(2.3, 2,"Grasp Fails", bbox={'facecolor':'r','pad':5},
+                ha="right", va="top", transform=plt.gca().transAxes )
+        #### Text Output
+    else:
+        #### Text Output
+        plt.text(2.3, 2,"Grasp Fails", bbox={'facecolor':'w','pad':5},
+                ha="right", va="top", transform=plt.gca().transAxes )
+        #### Text Output
+
     print("ok")
 
 def _extract_soil(event):
