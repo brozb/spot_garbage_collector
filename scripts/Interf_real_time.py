@@ -232,9 +232,6 @@ def _save_param(event):
     num_klusters = round(clust_default)
     points = np.asarray(pcd_klusters.points).copy()
 
-    # ································································································
-    # ................. KMEANS
-    # ································································································
     
     # Kmeans constrained
     #model = KMeansConstrained(n_clusters= num_klusters, size_min=2, size_max=5, random_state=0  )
