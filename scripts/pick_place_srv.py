@@ -66,6 +66,8 @@ class PickPlace:
                 r.poses = self.traj
                 rospy.loginfo('Sending trajectory request')
                 resp = self.trajectory_proxy(r)
+                if not resp.success:
+                    self.trajectory_fallback(True)
 
                 # open the gripper
                 self.open_proxy(TriggerRequest())
@@ -78,6 +80,8 @@ class PickPlace:
                 r.poses = self.traj[::-1]
                 rospy.loginfo('Sending trajectory request')
                 resp = self.trajectory_proxy(r)
+                if not resp.success:
+                    self.trajectory_fallback(False)
 
                 self.close_proxy()
                 self.stow_proxy()
@@ -96,6 +100,15 @@ class PickPlace:
             success = True
             index = -1  # no grasp failed
         return success, index, msg
+
+    def trajectory_fallback(self, holding):
+        rospy.logerr("Trajectory command failed, stowing arm")
+        if holding:
+            rospy.logerr("Emptying the gripper before stowing the arm")
+            self.open_proxy()
+            rospy.sleep(2)
+            self.close_proxy()
+        self.stow_proxy()
 
 
 if __name__ == "__main__":
