@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # Import libraries
 # https://docs.ultralytics.com/tasks/
 # python3 pub_camera.py
@@ -8,14 +10,17 @@ from sensor_msgs.msg import Image # Image is the message type
 from cv_bridge import CvBridge # Package to convert between ROS and OpenCV Images
 import cv2 # OpenCV library
 from tf import TransformBroadcaster
-from rospy import Time 
+from rospy import Time
+import rospkg 
 
 bridge = CvBridge()
 #model = YOLO('yolov8n-seg.yaml')
 # YOLO Parameters
 # model = YOLO('yolov8n-seg.pt')
-# model = YOLO('yolov8n.pt') 
-model = YOLO('best.pt') 
+# model = YOLO('yolov8n.pt')
+rospack = rospkg.RosPack()
+path = rospack.get_path('spot_garbage_collector')+'/scripts/'
+model = YOLO(path+'best.pt') 
 current_frame = []
 
 # TF Parameters
